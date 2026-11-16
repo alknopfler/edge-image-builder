@@ -304,11 +304,20 @@ func validateRawConfig(def *image.Definition) []FailedValidation {
 func validateTimeSync(os *image.OperatingSystem) []FailedValidation {
 	var failures []FailedValidation
 
-	if !os.Time.NtpConfiguration.ForceWait {
-		return nil
+	hasNTPSources := len(os.Time.NtpConfiguration.Pools) > 0 || len(os.Time.NtpConfiguration.Servers) > 0
+
+	if os.Time.Timezone == "" && hasNTPSources {
+		msg := "The 'ntp' configuration has no effect unless 'timezone' is also set."
+		failures = append(failures, FailedValidation{
+			UserMessage: msg,
+		})
 	}
 
-	if len(os.Time.NtpConfiguration.Pools) == 0 && len(os.Time.NtpConfiguration.Servers) == 0 {
+	if !os.Time.NtpConfiguration.ForceWait {
+		return failures
+	}
+
+	if !hasNTPSources {
 		msg := "If you're wanting to wait for NTP synchronization at boot, please ensure that you provide at least one NTP time source."
 		failures = append(failures, FailedValidation{
 			UserMessage: msg,

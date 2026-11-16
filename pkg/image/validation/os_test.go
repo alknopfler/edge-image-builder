@@ -935,6 +935,47 @@ func TestValidateTimeSync(t *testing.T) {
 				"If you're wanting to wait for NTP synchronization at boot, please ensure that you provide at least one NTP time source.",
 			},
 		},
+		`timezone missing but NTP pools configured`: {
+			Time: image.Time{
+				NtpConfiguration: image.NtpConfiguration{
+					Pools: []string{"2.suse.pool.ntp.org"},
+				},
+			},
+			ExpectedFailedMessages: []string{
+				"The 'ntp' configuration has no effect unless 'timezone' is also set.",
+			},
+		},
+		`timezone missing but NTP servers configured`: {
+			Time: image.Time{
+				NtpConfiguration: image.NtpConfiguration{
+					Servers: []string{"10.0.0.1", "10.0.0.2"},
+				},
+			},
+			ExpectedFailedMessages: []string{
+				"The 'ntp' configuration has no effect unless 'timezone' is also set.",
+			},
+		},
+		`timezone missing, forceWait specified, and NTP servers configured`: {
+			Time: image.Time{
+				NtpConfiguration: image.NtpConfiguration{
+					Servers:   []string{"10.0.0.1"},
+					ForceWait: true,
+				},
+			},
+			ExpectedFailedMessages: []string{
+				"The 'ntp' configuration has no effect unless 'timezone' is also set.",
+			},
+		},
+		`timezone missing, forceWait specified, and NTP sources missing`: {
+			Time: image.Time{
+				NtpConfiguration: image.NtpConfiguration{
+					ForceWait: true,
+				},
+			},
+			ExpectedFailedMessages: []string{
+				"If you're wanting to wait for NTP synchronization at boot, please ensure that you provide at least one NTP time source.",
+			},
+		},
 	}
 
 	for name, test := range tests {
